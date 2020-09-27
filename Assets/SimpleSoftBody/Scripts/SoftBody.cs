@@ -10,6 +10,7 @@ namespace SimpleSoftBody
         [SerializeField] private float stiffness = 10;
         [SerializeField] private float minFallForce = 5;
         [SerializeField] private float maxFallForce = 25;
+        [SerializeField] private float displacementTolerance = .0001f;
 
         MeshFilter meshFilter;
         Mesh mesh;
@@ -29,14 +30,14 @@ namespace SimpleSoftBody
             meshVertices = new Vector3[mesh.vertices.Length];
             for (int i = 0; i < softVertexts.Length; i++)
             {
-                softVertexts[i] = new SoftVertext(i, mesh.vertices[i], mesh.vertices[i], Vector3.zero, .001f);
+                softVertexts[i] = new SoftVertext(i, mesh.vertices[i], mesh.vertices[i], Vector3.zero, displacementTolerance);
                 meshVertices[i] = mesh.vertices[i];
             }
         }
 
         private void Update()
         {
-            
+
             var deltaTime = Time.deltaTime;
             var shouldUpdate = false;
             for (int i = 0; i < softVertexts.Length; i++)
@@ -86,7 +87,7 @@ namespace SimpleSoftBody
         private void ApplyPressure(float deltaTime, Vector3 contactPoint, Vector3 direction, float force)
         {
             var localPosition = transform.InverseTransformPoint(contactPoint);
-            var dir = direction * -1;
+            var dir = transform.InverseTransformDirection(direction * -1);
             var pressure = Mathf.Clamp(force, minFallForce, maxFallForce);
 
             foreach (var vertex in softVertexts)
