@@ -6,11 +6,11 @@ namespace SimpleSoftBody
     [RequireComponent(typeof(Rigidbody))]
     public class SoftBody : MonoBehaviour
     {
-        [SerializeField] private float bounce = 50;
-        [SerializeField] private float stiffness = 10;
-        [SerializeField] private float minFallForce = 5;
-        [SerializeField] private float maxFallForce = 25;
-        [SerializeField] private float displacementTolerance = .0001f;
+        [SerializeField] public float bounce = 50;
+        [SerializeField] public float stiffness = 10;
+        [SerializeField] public float minFallForce = 5;
+        [SerializeField] public float maxFallForce = 25;
+        [SerializeField] public float displacementTolerance = .0001f;
 
         MeshFilter meshFilter;
         Mesh mesh;
@@ -37,6 +37,9 @@ namespace SimpleSoftBody
 
         private void Update()
         {
+
+            if (transform.hasChanged == false) return;
+            transform.hasChanged = false;
 
             var deltaTime = Time.deltaTime;
             var shouldUpdate = false;

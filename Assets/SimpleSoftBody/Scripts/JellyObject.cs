@@ -6,9 +6,9 @@ namespace SimpleSoftBody
     [RequireComponent(typeof(MeshFilter))]
     public class JellyObject : MonoBehaviour
     {
-        [SerializeField] private float bounce = 50;
-        [SerializeField] private float stiffness = 10;
-        [SerializeField] private float fallForce = 25;
+        [SerializeField] public float bounce = 50;
+        [SerializeField] public float stiffness = 10;
+        [SerializeField] public float fallForce = 25;
 
         MeshFilter meshFilter;
         Mesh mesh;
