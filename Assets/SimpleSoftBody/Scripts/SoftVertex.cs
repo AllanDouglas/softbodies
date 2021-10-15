@@ -1,9 +1,8 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace SimpleSoftBody
 {
-    public class SoftVertext
+    public class SoftVertex
     {
         public readonly int vertexIndex;
         private Vector3 initialVertexPosition;
@@ -11,7 +10,7 @@ namespace SimpleSoftBody
         private Vector3 currentVelocity;
         private readonly float displacementTolerance;
 
-        public SoftVertext(
+        public SoftVertex(
             int vertexIndex,
             Vector3 initialVertexPosition,
             Vector3 currentVertexPosition,
@@ -31,7 +30,7 @@ namespace SimpleSoftBody
         public Vector3 GetDisplacement() =>
             currentVertexPosition - initialVertexPosition;
 
-        public void UpdateVelovity(in float bounceSpeed, in float deltaTime, in float stiffness)
+        public void UpdateVelocity(in float bounceSpeed, in float deltaTime, in float stiffness)
         {
             var displacement = GetDisplacement();
 

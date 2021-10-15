@@ -11,10 +11,11 @@ namespace SimpleSoftBody
         [SerializeField] public float minFallForce = 5;
         [SerializeField] public float maxFallForce = 25;
         [SerializeField] public float displacementTolerance = .0001f;
+        [SerializeField] public float pressureMultiplier = 1;
 
         MeshFilter meshFilter;
         Mesh mesh;
-        SoftVertext[] softVertexts;
+        SoftVertex[] softVertexts;
         Vector3[] meshVertices;
         private void Awake()
         {
@@ -26,11 +27,11 @@ namespace SimpleSoftBody
 
         private void LoadVertices()
         {
-            softVertexts = new SoftVertext[mesh.vertices.Length];
+            softVertexts = new SoftVertex[mesh.vertices.Length];
             meshVertices = new Vector3[mesh.vertices.Length];
             for (int i = 0; i < softVertexts.Length; i++)
             {
-                softVertexts[i] = new SoftVertext(i, mesh.vertices[i], mesh.vertices[i], Vector3.zero, displacementTolerance);
+                softVertexts[i] = new SoftVertex(i, mesh.vertices[i], mesh.vertices[i], Vector3.zero, displacementTolerance);
                 meshVertices[i] = mesh.vertices[i];
             }
         }
@@ -52,7 +53,7 @@ namespace SimpleSoftBody
                     shouldUpdate = softVertext.GetDisplacement().sqrMagnitude > 0;
                 }
 
-                softVertext.UpdateVelovity(in bounce, in deltaTime, in stiffness);
+                softVertext.UpdateVelocity(in bounce, in deltaTime, in stiffness);
                 softVertext.UpdateVertex(in deltaTime);
                 meshVertices[softVertext.vertexIndex] = softVertext.CurrentVertexPosition;
             }
@@ -83,7 +84,7 @@ namespace SimpleSoftBody
                     deltaTime: deltaTime,
                     contactPoint: contact.point,
                     direction: contact.normal,
-                    force: other.relativeVelocity.sqrMagnitude);
+                    force: other.relativeVelocity.sqrMagnitude * other.relativeVelocity.sqrMagnitude * pressureMultiplier);
             }
         }
 

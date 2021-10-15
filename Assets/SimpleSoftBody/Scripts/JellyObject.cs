@@ -14,7 +14,7 @@ namespace SimpleSoftBody
         Mesh mesh;
         private Camera mainCamera;
         private int layerMask;
-        SoftVertext[] softVertexts;
+        SoftVertex[] softVertexes;
         Vector3[] meshVertices;
 
         RaycastHit hit;
@@ -30,11 +30,11 @@ namespace SimpleSoftBody
 
         private void LoadVertices()
         {
-            softVertexts = new SoftVertext[mesh.vertices.Length];
+            softVertexes = new SoftVertex[mesh.vertices.Length];
             meshVertices = new Vector3[mesh.vertices.Length];
-            for (int i = 0; i < softVertexts.Length; i++)
+            for (int i = 0; i < softVertexes.Length; i++)
             {
-                softVertexts[i] = new SoftVertext(i, mesh.vertices[i], mesh.vertices[i], Vector3.zero, .001f);
+                softVertexes[i] = new SoftVertex(i, mesh.vertices[i], mesh.vertices[i], Vector3.zero, .001f);
                 meshVertices[i] = mesh.vertices[i];
             }
         }
@@ -50,16 +50,16 @@ namespace SimpleSoftBody
 
             var shouldUpdate = false;
 
-            for (int i = 0; i < softVertexts.Length; i++)
+            for (int i = 0; i < softVertexes.Length; i++)
             {
-                var softVertext = softVertexts[i];
+                var softVertext = softVertexes[i];
 
                 if (shouldUpdate == false)
                 {
                     shouldUpdate = softVertext.GetDisplacement().sqrMagnitude > 0;
                 }
 
-                softVertext.UpdateVelovity(in bounce, in deltaTime, in stiffness);
+                softVertext.UpdateVelocity(in bounce, in deltaTime, in stiffness);
                 softVertext.UpdateVertex(in deltaTime);
                 meshVertices[softVertext.vertexIndex] = softVertext.CurrentVertexPosition;
             }
@@ -94,7 +94,7 @@ namespace SimpleSoftBody
         {
             var localPosition = transform.InverseTransformPoint(contactPoint);
 
-            foreach (var vertex in softVertexts)
+            foreach (var vertex in softVertexes)
             {
                 vertex.ApplyPressure(
                     localPosition: in localPosition,
