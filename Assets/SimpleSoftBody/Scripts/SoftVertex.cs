@@ -5,31 +5,29 @@ namespace SimpleSoftBody
     public class JellyVertex
     {
         public readonly int vertexIndex;
-        private Vector3 restPosition;
         private Vector3 currentPosition;
         public Vector3 currentVelocity;
+        public readonly Vector3 initialPosition;
 
-        public JellyVertex(Vector3 restPosition)
+        public JellyVertex(Vector3 initialPosition)
         {
-            this.restPosition = restPosition;
-            currentPosition = restPosition;
+            currentPosition = initialPosition;
+            this.initialPosition = initialPosition;
         }
 
         public Vector3 CurrentPosition => currentPosition;
-        public Vector3 RestPosition => restPosition;
-
-        public Vector3 Shake(float mass, float stiffness, float damping, float intensity)
+        public Vector3 Shake(Vector3 restPosition, float mass, float stiffness, float damping)
         {
             var force = (restPosition - currentPosition) * stiffness;
             currentVelocity = (currentVelocity + (force / mass)) * damping;
             currentPosition += currentVelocity;
 
-            if ((currentVelocity + force + force / mass).sqrMagnitude < 0.0001f)
+            if (Mathf.Pow((currentVelocity + force + force / mass).sqrMagnitude, 2) < 0.0001f)
             {
                 currentPosition = restPosition;
             }
 
-            return Vector3.Lerp(restPosition, currentPosition, intensity); 
+            return currentPosition;
         }
     }
 

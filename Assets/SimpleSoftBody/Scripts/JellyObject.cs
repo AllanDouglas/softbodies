@@ -5,16 +5,14 @@ namespace SimpleSoftBody
     [RequireComponent(typeof(MeshFilter))]
     public class JellyObject : MonoBehaviour
     {
-        [SerializeField] public float dumping = 1;
+        [SerializeField] public float dumping = .75f;
         [SerializeField] public float stiffness = 1;
         [SerializeField] public float mass = 1;
         [SerializeField] public float intensity = 1;
 
         MeshFilter meshFilter;
         Mesh mesh;
-        private Camera mainCamera;
-        private int layerMask;
-        SoftVertex[] softVertexes;
+        
         Vector3[] meshVertices;
 
         JellyVertex[] jellyVertices;
@@ -27,12 +25,10 @@ namespace SimpleSoftBody
             meshFilter = GetComponent<MeshFilter>();
             renderer = GetComponent<MeshRenderer>();
             CreateJellyVertexArray();
-            positions = meshFilter.mesh.vertices;
+            meshVertices = meshFilter.mesh.vertices;
+            positions = new Vector3[meshVertices.Length];
 
             mesh = meshFilter.mesh;
-            mainCamera = Camera.main;
-            layerMask = 1 << gameObject.layer;
-            LoadVertices();
         }
 
         private void CreateJellyVertexArray()
@@ -44,31 +40,21 @@ namespace SimpleSoftBody
                 jellyVertices[i] = new JellyVertex(transform.TransformPoint(meshFilter.mesh.vertices[i]));
             }
         }
-
-        private void LoadVertices()
-        {
-            softVertexes = new SoftVertex[mesh.vertices.Length];
-            meshVertices = new Vector3[mesh.vertices.Length];
-            for (int i = 0; i < softVertexes.Length; i++)
-            {
-                softVertexes[i] = new SoftVertex(i, mesh.vertices[i], mesh.vertices[i], Vector3.zero, .001f);
-                meshVertices[i] = mesh.vertices[i];
-            }
-        }
-
         private void FixedUpdate()
         {
             for (int i = 0; i < jellyVertices.Length; i++)
             {
-                var restPosition = jellyVertices[i].RestPosition;
+                var jellyVertex = jellyVertices[i];
+                var restPosition = transform.TransformPoint(meshVertices[i]);
                 var intensity = (1 - (renderer.bounds.max.y - restPosition.y) / renderer.bounds.size.y) * this.intensity;
-                var verticePosition = jellyVertices[i].Shake(
+
+                var verticePosition = transform.InverseTransformPoint(jellyVertex.Shake(
+                                    restPosition: restPosition,
                                     mass: mass,
                                     stiffness: stiffness,
-                                    damping: dumping,
-                                    intensity: intensity);
-                                    
-                positions[i] = transform.InverseTransformPoint(verticePosition);
+                                    damping: dumping));
+
+                positions[i] = Vector3.Lerp(meshVertices[i], verticePosition, intensity);
             }
 
             UpdateMesh(positions);
@@ -78,6 +64,7 @@ namespace SimpleSoftBody
         {
             mesh.vertices = positions;
             mesh.RecalculateNormals();
+            // mesh.reva();
         }
     }
 }
