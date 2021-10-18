@@ -68,9 +68,7 @@ namespace SimpleSoftBody
         private void UpdateMesh()
         {
             mesh.vertices = meshVertices;
-            mesh.RecalculateBounds();
             mesh.RecalculateNormals();
-            mesh.RecalculateTangents();
         }
 
         private void OnCollisionEnter(Collision other)

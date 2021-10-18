@@ -2,6 +2,37 @@ using UnityEngine;
 
 namespace SimpleSoftBody
 {
+    public class JellyVertex
+    {
+        public readonly int vertexIndex;
+        private Vector3 restPosition;
+        private Vector3 currentPosition;
+        public Vector3 currentVelocity;
+
+        public JellyVertex(Vector3 restPosition)
+        {
+            this.restPosition = restPosition;
+            currentPosition = restPosition;
+        }
+
+        public Vector3 CurrentPosition => currentPosition;
+        public Vector3 RestPosition => restPosition;
+
+        public Vector3 Shake(float mass, float stiffness, float damping, float intensity)
+        {
+            var force = (restPosition - currentPosition) * stiffness;
+            currentVelocity = (currentVelocity + (force / mass)) * damping;
+            currentPosition += currentVelocity;
+
+            if ((currentVelocity + force + force / mass).sqrMagnitude < 0.0001f)
+            {
+                currentPosition = restPosition;
+            }
+
+            return Vector3.Lerp(restPosition, currentPosition, intensity); 
+        }
+    }
+
     public class SoftVertex
     {
         public readonly int vertexIndex;

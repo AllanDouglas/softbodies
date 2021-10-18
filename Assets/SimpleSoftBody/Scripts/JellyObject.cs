@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
-using UnityEngine.Networking.Match;
 
 namespace SimpleSoftBody
 {
     [RequireComponent(typeof(MeshFilter))]
     public class JellyObject : MonoBehaviour
     {
-        [SerializeField] public float bounce = 50;
-        [SerializeField] public float stiffness = 10;
-        [SerializeField] public float fallForce = 25;
+        [SerializeField] public float dumping = 1;
+        [SerializeField] public float stiffness = 1;
+        [SerializeField] public float mass = 1;
+        [SerializeField] public float intensity = 1;
 
         MeshFilter meshFilter;
         Mesh mesh;
@@ -17,15 +17,32 @@ namespace SimpleSoftBody
         SoftVertex[] softVertexes;
         Vector3[] meshVertices;
 
+        JellyVertex[] jellyVertices;
+        Vector3[] positions;
+        new MeshRenderer renderer;
         RaycastHit hit;
 
         private void Awake()
         {
             meshFilter = GetComponent<MeshFilter>();
+            renderer = GetComponent<MeshRenderer>();
+            CreateJellyVertexArray();
+            positions = meshFilter.mesh.vertices;
+
             mesh = meshFilter.mesh;
             mainCamera = Camera.main;
             layerMask = 1 << gameObject.layer;
             LoadVertices();
+        }
+
+        private void CreateJellyVertexArray()
+        {
+            jellyVertices = new JellyVertex[meshFilter.mesh.vertexCount];
+
+            for (int i = 0; i < jellyVertices.Length; i++)
+            {
+                jellyVertices[i] = new JellyVertex(transform.TransformPoint(meshFilter.mesh.vertices[i]));
+            }
         }
 
         private void LoadVertices()
@@ -39,70 +56,28 @@ namespace SimpleSoftBody
             }
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
-            var deltaTime = Time.deltaTime;
-
-            if (Input.GetMouseButtonDown(0))
+            for (int i = 0; i < jellyVertices.Length; i++)
             {
-                TryApplyPressure(deltaTime);
+                var restPosition = jellyVertices[i].RestPosition;
+                var intensity = (1 - (renderer.bounds.max.y - restPosition.y) / renderer.bounds.size.y) * this.intensity;
+                var verticePosition = jellyVertices[i].Shake(
+                                    mass: mass,
+                                    stiffness: stiffness,
+                                    damping: dumping,
+                                    intensity: intensity);
+                                    
+                positions[i] = transform.InverseTransformPoint(verticePosition);
             }
 
-            var shouldUpdate = false;
-
-            for (int i = 0; i < softVertexes.Length; i++)
-            {
-                var softVertext = softVertexes[i];
-
-                if (shouldUpdate == false)
-                {
-                    shouldUpdate = softVertext.GetDisplacement().sqrMagnitude > 0;
-                }
-
-                softVertext.UpdateVelocity(in bounce, in deltaTime, in stiffness);
-                softVertext.UpdateVertex(in deltaTime);
-                meshVertices[softVertext.vertexIndex] = softVertext.CurrentVertexPosition;
-            }
-
-            if (!shouldUpdate)
-                return;
-
-            UpdateMesh();
-
+            UpdateMesh(positions);
         }
 
-        private void UpdateMesh()
+        private void UpdateMesh(Vector3[] positions)
         {
-            mesh.vertices = meshVertices;
-            mesh.RecalculateBounds();
+            mesh.vertices = positions;
             mesh.RecalculateNormals();
-            mesh.RecalculateTangents();
         }
-
-        private void TryApplyPressure(float deltaTime)
-        {
-            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray.origin, ray.direction, out hit, Mathf.Infinity, layerMask))
-            {
-                if (hit.collider.gameObject == gameObject)
-                    ApplyPressure(deltaTime, hit.point, fallForce);
-            }
-        }
-
-        private void ApplyPressure(float deltaTime, Vector3 contactPoint, float force)
-        {
-            var localPosition = transform.InverseTransformPoint(contactPoint);
-
-            foreach (var vertex in softVertexes)
-            {
-                vertex.ApplyPressure(
-                    localPosition: in localPosition,
-                    pressure: in force,
-                    deltaTime: in deltaTime);
-            }
-        }
-
-
     }
 }
